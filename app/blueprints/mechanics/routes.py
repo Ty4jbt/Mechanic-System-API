@@ -4,6 +4,7 @@ from marshmallow import ValidationError
 from app.models import Mechanic, db
 from app.blueprints.mechanics import mechanics_bp
 from app.blueprints.mechanics.schemas import mechanic_schema, mechanics_schema
+from app.extensions import cache
 
 @mechanics_bp.route('/', methods=['POST'])
 def create_mechanic():
@@ -25,6 +26,7 @@ def create_mechanic():
     return mechanic_schema.jsonify(new_mechanic), 201
 
 @mechanics_bp.route('/', methods=['GET'])
+@cache.cached(timeout=60)
 def get_mechanics():
     query = select(Mechanic)
     result = db.session.execute(query).scalars().all()
