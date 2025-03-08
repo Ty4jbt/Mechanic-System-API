@@ -39,15 +39,15 @@ def get_service_tickets():
     result = db.session.execute(query).scalars().all()
     return service_tickets_schema.jsonify(result), 200
 
-# @service_ticket_bp.route('/<int:service_ticket_id>', methods=['DELETE'])
-# def delete_service_ticket(service_ticket_id):
-#     query = select(ServiceTicket).where(ServiceTicket.id == service_ticket_id)
-#     service_ticket = db.session.execute(query).scalars().first()
+@service_ticket_bp.route('/<int:service_ticket_id>', methods=['DELETE'])
+def delete_service_ticket(service_ticket_id):
+    query = select(ServiceTicket).where(ServiceTicket.id == service_ticket_id)
+    service_ticket = db.session.execute(query).scalars().first()
     
-#     db.session.delete(service_ticket)
-#     db.session.commit()
+    db.session.delete(service_ticket)
+    db.session.commit()
 
-#     return jsonify({'message': f'Succesfully deleted service ticket {service_ticket_id}'}), 200
+    return jsonify({'message': f'Succesfully deleted service ticket {service_ticket_id}'}), 200
 
 # @service_ticket_bp.route('/<int:service_ticket_id>', methods=['PUT'])
 # def update_service_ticket(service_ticket_id):
