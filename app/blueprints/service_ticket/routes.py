@@ -4,6 +4,7 @@ from marshmallow import ValidationError
 from app.models import ServiceTicket, db, Mechanic
 from app.blueprints.service_ticket import service_ticket_bp
 from app.blueprints.service_ticket.schema import service_ticket_schema, service_tickets_schema, return_service_ticket_schema
+from app.utils.util import token_required
 
 @service_ticket_bp.route('/', methods=['POST'])
 def create_service_ticket():
@@ -48,6 +49,13 @@ def delete_service_ticket(service_ticket_id):
     db.session.commit()
 
     return jsonify({'message': f'Succesfully deleted service ticket {service_ticket_id}'}), 200
+
+@service_ticket_bp.route('/my-tickets', methods=['GET'])
+@token_required
+def get_my_tickets(customer_id):
+    query = select(ServiceTicket).where(ServiceTicket.customer_id == customer_id)
+    result = db.session.execute(query).scalars().all()
+    return service_tickets_schema.jsonify(result), 200
 
 # @service_ticket_bp.route('/<int:service_ticket_id>', methods=['PUT'])
 # def update_service_ticket(service_ticket_id):

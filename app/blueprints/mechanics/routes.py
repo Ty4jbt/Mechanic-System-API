@@ -5,6 +5,7 @@ from app.models import Mechanic, db
 from app.blueprints.mechanics import mechanics_bp
 from app.blueprints.mechanics.schemas import mechanic_schema, mechanics_schema
 from app.extensions import cache
+from app.utils.util import token_required
 
 @mechanics_bp.route('/', methods=['POST'])
 def create_mechanic():
@@ -32,7 +33,8 @@ def get_mechanics():
     result = db.session.execute(query).scalars().all()
     return mechanics_schema.jsonify(result), 200
 
-@mechanics_bp.route('//<int:mechanic_id>', methods=['PUT'])
+@mechanics_bp.route('/', methods=['PUT'])
+@token_required
 def update_mechanic(mechanic_id):
     query = select(Mechanic).where(Mechanic.id == mechanic_id)
     mechanic = db.session.execute(query).scalars().first()
@@ -51,7 +53,8 @@ def update_mechanic(mechanic_id):
     db.session.commit()
     return mechanic_schema.jsonify(mechanic), 200
 
-@mechanics_bp.route('//<int:mechanic_id>', methods=['DELETE'])
+@mechanics_bp.route('/', methods=['DELETE'])
+@token_required
 def delete_mechanic(mechanic_id):
     query = select(Mechanic).where(Mechanic.id == mechanic_id)
     mechanic = db.session.execute(query).scalars().first()
