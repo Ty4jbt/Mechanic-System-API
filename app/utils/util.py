@@ -1,4 +1,5 @@
-import jwt
+import jose
+from jose import jwt
 from datetime import datetime, timezone, timedelta
 from functools import wraps
 from flask import request, jsonify
@@ -21,23 +22,23 @@ def token_required(f):
         token = None
 
         if "Authorization" in request.headers:
-            token = request.headers["Authorization"].split()[1]
+            token = request.headers["Authorization"].split(" ")[1]
 
             if not token:
-                return jsonify({'message': 'Token is missing'}), 400
+                return jsonify({'message': 'Token is missing'}), 401
             
             try:
                 data = jwt.decode(token, SECRET_KEY, algorithms=['HS256'])
                 print(data)
                 customer_id = data['sub']
-            except jwt.ExpiredSignatureError as e:
-                return jsonify({'message': 'Token has expired'}), 400
-            except jwt.InvalidTokenError as e:
-                return jsonify({'message': 'Invalid token'}), 400
+            except jose.exceptions.ExpiredSignatureError as e:
+                return jsonify({'message': 'Token has expired'}), 401
+            except jose.exceptions.JWTError as e:
+                return jsonify({'message': 'Invalid token'}), 401
             
             return f(customer_id, *args, **kwargs)
         
         else:
-            return jsonify({'message': 'You must be logged in'}), 400
+            return jsonify({'message': 'You must be logged in'}), 401
 
     return decorated
