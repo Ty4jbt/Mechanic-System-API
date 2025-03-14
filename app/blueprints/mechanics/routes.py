@@ -3,9 +3,34 @@ from sqlalchemy import select
 from marshmallow import ValidationError
 from app.models import Mechanic, db
 from app.blueprints.mechanics import mechanics_bp
-from app.blueprints.mechanics.schemas import mechanic_schema, mechanics_schema
+from app.blueprints.mechanics.schemas import mechanic_schema, mechanics_schema, login_schema
 from app.extensions import cache
-from app.utils.util import token_required
+from app.utils.util import mechanic_token_required, encode_mechanic_token
+
+@mechanics_bp.route('/login', methods=['POST'])
+def login():
+    try:
+        credentials = login_schema.load(request.json)
+        email = credentials['email']
+        password = credentials['password']
+    except ValidationError as e:
+        return jsonify(e.messages), 400
+    
+    query = select(Mechanic).where(Mechanic.email == email)
+    mechanic = db.session.execute(query).scalars().first()
+
+    if mechanic and mechanic.password == password:
+        token = encode_mechanic_token(mechanic.id)
+
+        response = {
+            "status": "success",
+            "message": "Successfully logged in",
+            "token": token
+        }
+
+        return jsonify(response), 200
+    else:
+        return jsonify({'message': 'Invalid email or password'}), 400
 
 @mechanics_bp.route('/', methods=['POST'])
 def create_mechanic():
@@ -18,6 +43,7 @@ def create_mechanic():
         name=mechanic_data['name'],
         email=mechanic_data['email'],
         phone=mechanic_data['phone'],
+        password=mechanic_data['password'],
         salary=mechanic_data['salary']
     )
 
@@ -34,7 +60,7 @@ def get_mechanics():
     return mechanics_schema.jsonify(result), 200
 
 @mechanics_bp.route('/', methods=['PUT'])
-@token_required
+@mechanic_token_required
 def update_mechanic(mechanic_id):
     query = select(Mechanic).where(Mechanic.id == mechanic_id)
     mechanic = db.session.execute(query).scalars().first()
@@ -54,7 +80,7 @@ def update_mechanic(mechanic_id):
     return mechanic_schema.jsonify(mechanic), 200
 
 @mechanics_bp.route('/', methods=['DELETE'])
-@token_required
+@mechanic_token_required
 def delete_mechanic(mechanic_id):
     query = select(Mechanic).where(Mechanic.id == mechanic_id)
     mechanic = db.session.execute(query).scalars().first()

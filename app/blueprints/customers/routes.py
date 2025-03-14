@@ -5,10 +5,9 @@ from app.models import Customer, db
 from app.blueprints.customers import customers_bp
 from app.blueprints.customers.schemas import customer_schema, customers_schema, login_schema
 from app.extensions import limiter
-from app.utils.util import encode_token, token_required
+from app.utils.util import encode_customer_token, customer_token_required
 
 @customers_bp.route('/login', methods=['POST'])
-
 def login():
     try:
         credentials = login_schema.load(request.json)
@@ -21,7 +20,7 @@ def login():
     customer = db.session.execute(query).scalars().first()
 
     if customer and customer.password == password:
-        token = encode_token(customer.id)
+        token = encode_customer_token(customer.id)
         
         response = {
             "status": "success",
@@ -34,7 +33,7 @@ def login():
         return jsonify({'message': 'Invalid email or password'}), 400
 
 @customers_bp.route('/', methods=['POST'])
-@limiter.limit('5 per hour')
+@limiter.limit('10 per hour')
 def create_customer():
     try:
         customer_data = customer_schema.load(request.json)
@@ -61,7 +60,7 @@ def get_customers():
     return customers_schema.jsonify(result), 200
 
 @customers_bp.route('/', methods=['PUT'])
-@token_required
+@customer_token_required
 def update_customer(customer_id):
     query = select(Customer).where(Customer.id == customer_id)
     customer = db.session.execute(query).scalars().first()
@@ -81,7 +80,7 @@ def update_customer(customer_id):
     return customer_schema.jsonify(customer), 200
 
 @customers_bp.route('/', methods=['DELETE'])
-@token_required
+@customer_token_required
 def delete_customer(customer_id):
     query = select(Customer).where(Customer.id == customer_id)
     customer = db.session.execute(query).scalars().first()
