@@ -48,4 +48,35 @@ class Mechanic(Base):
     password: Mapped[str] = mapped_column(db.String(100), nullable=False)
     salary: Mapped[float] = mapped_column(db.Float)
 
-    service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(secondary=service_mechanic)
+    service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(secondary=service_mechanic, back_populates='mechanics', cascade='all, delete')
+    orders: Mapped[List["Order"]] = db.relationship(back_populates='mechanic', cascade='all, delete')
+
+class Part(Base):
+    __tablename__ = 'parts'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    part_name: Mapped[str] = mapped_column(db.String(100), nullable=False)
+    price: Mapped[float] = mapped_column(db.Float(), nullable=False)
+
+    order_parts: Mapped[List["OrderParts"]] = db.relationship(back_populates='part')
+
+class Order(Base):
+    __tablename__ = 'orders'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    order_date: Mapped[date] = mapped_column(nullable=False)
+    mechanic_id: Mapped[int] = mapped_column(db.ForeignKey('mechanics.id'), nullable=False)
+
+    mechanic: Mapped["Mechanic"] = db.relationship(back_populates='orders')
+    order_parts: Mapped[List["OrderParts"]] = db.relationship(back_populates='order')
+
+class OrderParts(Base):
+    __tablename__ = 'order_parts'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    order_id: Mapped[int] = mapped_column(db.ForeignKey('orders.id'), nullable=False)
+    part_id: Mapped[int] = mapped_column(db.ForeignKey('parts.id'), nullable=False)
+    quantity: Mapped[int] = mapped_column(nullable=False)
+
+    order: Mapped["Order"] = db.relationship(back_populates='order_parts')    
+    part: Mapped["Part"] = db.relationship(back_populates='order_parts')
