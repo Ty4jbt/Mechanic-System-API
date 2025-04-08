@@ -15,6 +15,13 @@ service_mechanic = db.Table(
     db.Column('ticket_id', db.ForeignKey('service_tickets.id'))
 )
 
+service_part = db.Table(
+    'service_part',
+    Base.metadata,
+    db.Column('part_id', db.ForeignKey('parts.id')),
+    db.Column('ticket_id', db.ForeignKey('service_tickets.id'))
+)
+
 class Customer(Base):
     __tablename__ = 'customers'
 
@@ -37,6 +44,7 @@ class ServiceTicket(Base):
 
     customer: Mapped["Customer"] = db.relationship(back_populates='service_tickets')
     mechanics: Mapped[List["Mechanic"]] = db.relationship(secondary=service_mechanic, back_populates='service_tickets')
+    parts: Mapped[List["Part"]] = db.relationship(secondary=service_part, back_populates='service_tickets')
 
 class Mechanic(Base):
     __tablename__ = 'mechanics'
@@ -59,6 +67,7 @@ class Part(Base):
     price: Mapped[float] = mapped_column(db.Float(), nullable=False)
 
     order_parts: Mapped[List["OrderParts"]] = db.relationship(back_populates='part')
+    service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(secondary=service_part, back_populates='parts')
 
 class Order(Base):
     __tablename__ = 'orders'
@@ -80,3 +89,14 @@ class OrderParts(Base):
 
     order: Mapped["Order"] = db.relationship(back_populates='order_parts')    
     part: Mapped["Part"] = db.relationship(back_populates='order_parts')
+
+class ServicePartQuantity(Base):
+    __tablename__ = 'service_part_quantity'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    service_ticket_id: Mapped[int] = mapped_column(db.ForeignKey('service_tickets.id'), nullable=False)
+    part_id: Mapped[int] = mapped_column(db.ForeignKey('parts.id'), nullable=False)
+    quantity: Mapped[int] = mapped_column(nullable=False)
+
+    service_ticket: Mapped["ServiceTicket"] = db.relationship()
+    part: Mapped["Part"] = db.relationship()

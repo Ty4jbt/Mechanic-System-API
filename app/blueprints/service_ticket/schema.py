@@ -24,7 +24,25 @@ class EditServiceTickerSchema(ma.Schema):
     class Meta:
         fields = ("add_mechanic_ids", "remove_mechanic_ids")
 
+class AddPartSchema(ma.Schema):
+    part_ids = fields.List(fields.Int(), required=True)
+    quantity = fields.Int(required=True)
+    class Meta:
+        fields = ("part_ids", "quantity")
+
+class MessageResponseSchema(ma.Schema):
+    message = fields.String(required=True)
+
+    part_id = fields.Int()
+    service_ticket_id = fields.Int()
+    quantity = fields.Int()
+
+    class Meta:
+        fields = ("message", "part_id", "service_ticket_id", "quantity")
+    
 service_ticket_schema = CreateServiceTicketSchema()
 service_tickets_schema = ServiceTicketSchema(many=True)
 return_service_ticket_schema = ServiceTicketSchema()
 edit_service_ticket_schema = EditServiceTickerSchema()
+add_part_schema = AddPartSchema()
+message_response_schema = MessageResponseSchema()
