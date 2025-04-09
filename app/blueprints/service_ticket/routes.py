@@ -1,17 +1,16 @@
 from flask import request, jsonify
 from sqlalchemy import select
 from marshmallow import ValidationError
-from app.models import ServiceTicket, db, Mechanic, Part, ServicePartQuantity
+from app.models import ServiceTicket, db, Mechanic, Inventory, ServiceInventoryQuantity
 from app.blueprints.service_ticket import service_ticket_bp
-from app.blueprints.service_ticket.schema import service_ticket_schema, service_tickets_schema, return_service_ticket_schema, edit_service_ticket_schema, add_part_schema, message_response_schema
-from app.blueprints.parts.schemas import parts_schema
+from app.blueprints.service_ticket.schema import service_ticket_schema, service_tickets_schema, return_service_ticket_schema, edit_service_ticket_schema, add_inventory_schema, message_response_schema, reciept_schema
+from app.blueprints.inventory.schemas import inventory_items_schema
 from app.utils.util import customer_token_required
 
 @service_ticket_bp.route('/', methods=['POST'])
 def create_service_ticket():
     try:
         service_ticket_data = service_ticket_schema.load(request.json)
-        print(service_ticket_data)
     except ValidationError as e:
         return jsonify(e.messages), 400
     
@@ -19,7 +18,8 @@ def create_service_ticket():
         date_created=service_ticket_data['date_created'],
         desc=service_ticket_data['desc'],
         VIN=service_ticket_data['VIN'],
-        customer_id=service_ticket_data['customer_id']
+        customer_id=service_ticket_data['customer_id'],
+        total_cost=0.0
     )
     
     for mechanic_id in service_ticket_data['mechanic_ids']:
@@ -45,6 +45,9 @@ def get_service_tickets():
 def delete_service_ticket(service_ticket_id):
     query = select(ServiceTicket).where(ServiceTicket.id == service_ticket_id)
     service_ticket = db.session.execute(query).scalars().first()
+
+    if service_ticket is None:
+        return jsonify({'message': 'Service ticket not found'}), 400
     
     db.session.delete(service_ticket)
     db.session.commit()
@@ -85,8 +88,8 @@ def edit_service_ticket(service_ticket_id):
     db.session.commit()
     return return_service_ticket_schema.jsonify(service_ticket), 200
 
-@service_ticket_bp.route('/<int:service_ticket_id>/parts', methods=['POST'])
-def add_part_to_ticket(service_ticket_id):
+@service_ticket_bp.route('/<int:service_ticket_id>/inventory', methods=['POST'])
+def add_inventory_to_ticket(service_ticket_id):
     query = select(ServiceTicket).where(ServiceTicket.id == service_ticket_id)
     service_ticket = db.session.execute(query).scalars().first()
 
@@ -94,32 +97,36 @@ def add_part_to_ticket(service_ticket_id):
         return jsonify({'message': 'Service ticket not found'}), 404
     
     try:
-        part_data = add_part_schema.load(request.json)
+        inventory_data = add_inventory_schema.load(request.json)
     except ValidationError as e:
         return jsonify(e.messages), 400
 
-    if len(part_data['part_ids']) != len(part_data['quantities']):
+    if len(inventory_data['inventory_ids']) != len(inventory_data['quantities']):
         return message_response_schema.jsonify({
             'message': 'Part IDs and quantities must match in length'
         }), 400
     
-    added_parts = []
+    added_items = []
+    total_cost = 0.0
 
-    for i, part_id in enumerate(part_data['part_ids']):
-        quantity = part_data['quantities'][i]
+    for i, inventory_id in enumerate(inventory_data['inventory_ids']):
+        quantity = inventory_data['quantities'][i]
 
-        part_query = select(Part).where(Part.id == part_id)
-        part = db.session.execute(part_query).scalars().first()
+        inventory_query = select(Inventory).where(Inventory.id == inventory_id)
+        item = db.session.execute(inventory_query).scalars().first()
 
-        if part is None:
-            return jsonify({'message': 'Part not found'}), 404
+        if item is None:
+            return jsonify({'message': f'Inventory item with ID {inventory_id} not found'}), 404
+        
+        if item.quantity_in_stock < quantity:
+            return jsonify({'message': f'Not enough stock for item {item.name}. Available: {item.quantity_in_stock}, Requested: {quantity}'}), 400
 
-        if part not in service_ticket.parts:
-            service_ticket.parts.append(part)
+        if item not in service_ticket.inventory_items:
+            service_ticket.inventory_items.append(item)
 
-        quantity_query = select(ServicePartQuantity).where(
-            (ServicePartQuantity.service_ticket_id == service_ticket_id) & 
-            (ServicePartQuantity.part_id == part_id)
+        quantity_query = select(ServiceInventoryQuantity).where(
+            (ServiceInventoryQuantity.service_ticket_id == service_ticket_id) & 
+            (ServiceInventoryQuantity.inventory_id == inventory_id)
         )
 
         existing_quantity = db.session.execute(quantity_query).scalars().first()
@@ -127,97 +134,163 @@ def add_part_to_ticket(service_ticket_id):
         if existing_quantity:
             existing_quantity.quantity = quantity
         else:
-            new_quantity = ServicePartQuantity(
+            new_quantity = ServiceInventoryQuantity(
                 service_ticket_id=service_ticket_id,
-                part_id=part.id,
+                inventory_id=item.id,
                 quantity=quantity
             )
             db.session.add(new_quantity)
 
-        added_parts.append({
-            'part_id': part.id,
-            'quantity': quantity
+        item.quantity_in_stock -= quantity
+
+        item_cost = item.price * quantity
+        total_cost += item_cost
+
+        added_items.append({
+            'inventory_id': item.id,
+            'name': item.name,
+            'quantity': quantity,
+            'unit_price': item.price,
+            'total_price': item_cost
         })
+
+    service_ticket.total_cost = (service_ticket.total_cost or 0) + total_cost
 
     db.session.commit()
 
-    response_data = {
-        'message': f'Successfully added {len(added_parts)} parts to service ticket {service_ticket_id}',
-        'service_ticket_id': service_ticket_id
+    receipt_data = {
+        'total_cost': total_cost,
+        'service_ticket': service_ticket,
+        'items': added_items
     }
 
-    return message_response_schema.jsonify(response_data), 201
+    return reciept_schema.jsonify(receipt_data), 201
 
-@service_ticket_bp.route('/<int:service_ticket_id>/parts', methods=['GET'])
-def get_ticket_parts(service_ticket_id):
+@service_ticket_bp.route('/<int:service_ticket_id>/inventory', methods=['GET'])
+def get_ticket_inventory(service_ticket_id):
     query = select(ServiceTicket).where(ServiceTicket.id == service_ticket_id)
     service_ticket = db.session.execute(query).scalars().first()
 
     if service_ticket is None:
         return jsonify({'message': 'Service ticket not found'}), 404
 
-    parts = service_ticket.parts
+    items = service_ticket.inventory_items
 
-    quantity_query = select(ServicePartQuantity).where(
-        ServicePartQuantity.service_ticket_id == service_ticket_id
+    quantity_query = select(ServiceInventoryQuantity).where(
+        ServiceInventoryQuantity.service_ticket_id == service_ticket_id
     )
 
     quantity_relations = db.session.execute(quantity_query).scalars().all()
 
-    parts_quant = []
+    items_with_quantity = []
 
     for relation in quantity_relations:
-        part_query = select(Part).where(Part.id == relation.part_id)
-        part = db.session.execute(part_query).scalars().first()
+        inventory_query = select(Inventory).where(Inventory.id == relation.inventory_id)
+        item = db.session.execute(inventory_query).scalars().first()
 
-        if part:
-            part_data = {
-                'id': part.id,
-                'part_name': part.part_name,
-                'price': part.price,
-                'quantity': relation.quantity
+        if item:
+            item_data = {
+                'id': item.id,
+                'name': item.name,
+                'price': item.price,
+                'quantity': relation.quantity,
+                'total_price': item.price * relation.quantity
             }
-            parts_quant.append(part_data)
+            items_with_quantity.append(item_data)
 
     return jsonify({
-        'parts': parts_schema.dump(parts),
-        'parts_quant': parts_quant
+        'items': inventory_items_schema.dump(items),
+        'items_with_quantity': items_with_quantity,
+        'total_cost': service_ticket.total_cost
     }), 200
 
-@service_ticket_bp.route('/<int:service_ticket_id>/parts/<int:part_id>', methods=['DELETE'])
-def remove_part_from_ticket(service_ticket_id, part_id):
+@service_ticket_bp.route('/<int:service_ticket_id>/inventory/<int:inventory_id>', methods=['DELETE'])
+def remove_inventory_from_ticket(service_ticket_id, inventory_id):
     query = select(ServiceTicket).where(ServiceTicket.id == service_ticket_id)
     service_ticket = db.session.execute(query).scalars().first()
 
     if service_ticket is None:
         return message_response_schema.jsonify({'message': 'Service ticket not found'}), 400
 
-    part_query = select(Part).where(Part.id == part_id)
-    part = db.session.execute(part_query).scalars().first()
+    inventory_query = select(Inventory).where(Inventory.id == inventory_id)
+    item = db.session.execute(inventory_query).scalars().first()
 
-    if part is None:
-        return message_response_schema.jsonify({'message': 'Part not found'}), 400
+    if item is None:
+        return message_response_schema.jsonify({'message': 'Inventory item not found'}), 400
 
-    if part in service_ticket.parts:
-        service_ticket.parts.remove(part)
-
-    quantity_query = select(ServicePartQuantity).where(
-        (ServicePartQuantity.service_ticket_id == service_ticket_id) &
-        (ServicePartQuantity.part_id == part_id)
+    quantity_query = select(ServiceInventoryQuantity).where(
+        (ServiceInventoryQuantity.service_ticket_id == service_ticket_id) &
+        (ServiceInventoryQuantity.inventory_id == inventory_id)
     )
 
     existing_quantity = db.session.execute(quantity_query).scalars().first()
 
     if existing_quantity:
+        quantity = existing_quantity.quantity
+
+        item.quantity_in_stock += quantity
+
+        item_cost = item.price * quantity
+        service_ticket.total_cost -= item_cost
+
         db.session.delete(existing_quantity)
 
-    db.session.commit()
+        if item in service_ticket.inventory_items:
+            service_ticket.inventory_items.remove(item)
 
-    response_data = {
-        'message': f'Successfully removed part {part_id} from service ticket {service_ticket_id}',
-        'part_id': part_id,
-        'service_ticket_id': service_ticket_id
+        db.session.commit()
+
+        response_data = {
+            'message': f'Successfully removed {item.name} from service ticket {service_ticket_id}',
+            'inventory_id': item.id,
+            'service_ticket_id': service_ticket.id,
+            'quantity': quantity
+        }
+
+        return message_response_schema.jsonify(response_data), 200
+    else:
+        return message_response_schema.jsonify({'message': 'Inventory item not found in service ticket'}), 400
+
+@service_ticket_bp.route('/<int:service_ticket_id>/reciept', methods=['GET'])
+def get_service_ticket_receipt(service_ticket_id):
+    query = select(ServiceTicket).where(ServiceTicket.id == service_ticket_id)
+    service_ticket = db.session.execute(query).scalars().first()
+
+    if service_ticket is None:
+        return jsonify({'message': 'Service ticket not found'}), 404
+    
+    quantity_query = select(ServiceInventoryQuantity).where(
+        ServiceInventoryQuantity.service_ticket_id == service_ticket_id
+    )
+    quantity_relations = db.session.execute(quantity_query).scalars().all()
+
+    item = []
+    total_cost = 0.0
+
+    for relation in quantity_relations:
+        inventory_query = select(Inventory).where(Inventory.id == relation.inventory_id)
+        item = db.session.execute(inventory_query).scalars().first()
+
+        if item:
+            item_cost = item.price * relation.quantity
+            total_cost += item_cost
+
+            items.append({
+                'id': item.id,
+                'name': item.name,
+                'unit_price': item.price,
+                'quantity': relation.quantity,
+                'total_price': item_cost
+            })
+
+    if service_ticket.total_cost != total_cost:
+        service_ticket.total_cost = total_cost
+        db.session.commit()
+
+    receipt_data = {
+        'total_cost': total_cost,
+        'service_ticket': service_ticket,
+        'items': items
     }
 
-    return message_response_schema.jsonify(response_data), 200
-
+    return reciept_schema.jsonify(receipt_data), 200

@@ -1,4 +1,4 @@
-from app.models import Order, OrderParts
+from app.models import Order, OrderItems
 from app.extensions import ma
 from marshmallow import fields
 
@@ -10,20 +10,20 @@ class ReceiptSchema(ma.Schema):
             order_id: 1,
             mechanic_id: 1,
             order_date: "2023-10-01",
-            order_parts: [
+            order_items: [
                 {
-                    part: {part_name: "Tire", price: 199.99},
+                    inventory_item: {part_name: "Tire", price: 199.99},
                     quantity: 4,
                 },
                 {
-                    part: {part_name: "Rim", price: 499.99},
-                    quantity: 2,
+                    inventory_item: {part_name: "Rim", price: 499.99},
+                    quantity: 4,
                 }
             ]
         }
     }
     '''
-    total = fields.Float(required=True)
+    total_cost = fields.Float(required=True)
     order = fields.Nested('OrderSchema')
 
 
@@ -32,37 +32,37 @@ class OrderSchema(ma.SQLAlchemyAutoSchema):
         model = Order
         include_relationships = True
 
-    order_parts = fields.Nested('OrderPartSchema', many=True, exclude=['id'])
+    order_items = fields.Nested('OrderItemSchema', many=True, exclude=['id'])
 
-class OrderPartSchema(ma.SQLAlchemyAutoSchema):
+class OrderItemSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
-        model = OrderParts
+        model = OrderItems
 
-    part = fields.Nested('PartSchema', exclude=['id'])
+    inventory_item = fields.Nested('InventorySchema', exclude=['id'])
 
 class CreateOrderSchema(ma.Schema):
     '''
     {
         "mechanic_id": 1,
-        "part_quant": [
+        "inventory_items": [
             {
-                "part_id": 1,
-                "part_quant": 2
+                "inventory_id": 1,
+                "quantity": 2
             },
             {
-                "part_id": 2,
-                "part_quant": 3
+                "inventory_id": 2,
+                "quantity": 3
             }
         ]
     }
     '''
 
     mechanic_id = fields.Int(required=True)
-    part_quant = fields.Nested('PartQuantSchema', many=True, required=True)
+    inventory_items = fields.Nested('InventoryQuantSchema', many=True, required=True)
 
-class PartQuantSchema(ma.Schema):
-    part_id = fields.Int(required=True)
-    part_quant = fields.Int(required=True)
+class InventoryQuantSchema(ma.Schema):
+    inventory_id = fields.Int(required=True)
+    quantity = fields.Int(required=True)
 
 order_schema = OrderSchema()
 orders_schema = OrderSchema(many=True)

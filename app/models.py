@@ -15,10 +15,10 @@ service_mechanic = db.Table(
     db.Column('ticket_id', db.ForeignKey('service_tickets.id'))
 )
 
-service_part = db.Table(
-    'service_part',
+service_inventory = db.Table(
+    'service_inventory',
     Base.metadata,
-    db.Column('part_id', db.ForeignKey('parts.id')),
+    db.Column('inventory_id', db.ForeignKey('inventory.id')),
     db.Column('ticket_id', db.ForeignKey('service_tickets.id'))
 )
 
@@ -41,10 +41,11 @@ class ServiceTicket(Base):
     date_created: Mapped[date]
     desc: Mapped[str] = mapped_column(db.String(255), nullable=False)
     VIN: Mapped[str] = mapped_column(db.String(20), nullable=False)
+    total_cost: Mapped[float] = mapped_column(db.Float(), nullable=False)
 
     customer: Mapped["Customer"] = db.relationship(back_populates='service_tickets')
     mechanics: Mapped[List["Mechanic"]] = db.relationship(secondary=service_mechanic, back_populates='service_tickets')
-    parts: Mapped[List["Part"]] = db.relationship(secondary=service_part, back_populates='service_tickets')
+    inventory_items: Mapped[List["Inventory"]] = db.relationship(secondary=service_inventory, back_populates='service_tickets')
 
 class Mechanic(Base):
     __tablename__ = 'mechanics'
@@ -59,15 +60,16 @@ class Mechanic(Base):
     service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(secondary=service_mechanic, back_populates='mechanics', cascade='all, delete')
     orders: Mapped[List["Order"]] = db.relationship(back_populates='mechanic', cascade='all, delete')
 
-class Part(Base):
-    __tablename__ = 'parts'
+class Inventory(Base):
+    __tablename__ = 'inventory'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    part_name: Mapped[str] = mapped_column(db.String(100), nullable=False)
+    name: Mapped[str] = mapped_column(db.String(100), nullable=False)
     price: Mapped[float] = mapped_column(db.Float(), nullable=False)
+    quantity_in_stock: Mapped[int] = mapped_column(db.Integer, default=0)
 
-    order_parts: Mapped[List["OrderParts"]] = db.relationship(back_populates='part')
-    service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(secondary=service_part, back_populates='parts')
+    order_items: Mapped[List["OrderItems"]] = db.relationship(back_populates='inventory_item')
+    service_tickets: Mapped[List["ServiceTicket"]] = db.relationship(secondary=service_inventory, back_populates='inventory_items')
 
 class Order(Base):
     __tablename__ = 'orders'
@@ -75,28 +77,29 @@ class Order(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     order_date: Mapped[date] = mapped_column(nullable=False)
     mechanic_id: Mapped[int] = mapped_column(db.ForeignKey('mechanics.id'), nullable=False)
+    total_cost: Mapped[float] = mapped_column(db.Float(), nullable=False)
 
     mechanic: Mapped["Mechanic"] = db.relationship(back_populates='orders')
-    order_parts: Mapped[List["OrderParts"]] = db.relationship(back_populates='order')
+    order_items: Mapped[List["OrderItems"]] = db.relationship(back_populates='order')
 
-class OrderParts(Base):
-    __tablename__ = 'order_parts'
+class OrderItems(Base):
+    __tablename__ = 'order_items'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     order_id: Mapped[int] = mapped_column(db.ForeignKey('orders.id'), nullable=False)
-    part_id: Mapped[int] = mapped_column(db.ForeignKey('parts.id'), nullable=False)
+    inventory_id: Mapped[int] = mapped_column(db.ForeignKey('inventory.id'), nullable=False)
     quantity: Mapped[int] = mapped_column(nullable=False)
 
-    order: Mapped["Order"] = db.relationship(back_populates='order_parts')    
-    part: Mapped["Part"] = db.relationship(back_populates='order_parts')
+    order: Mapped["Order"] = db.relationship(back_populates='order_items')    
+    inventory_item: Mapped["Inventory"] = db.relationship(back_populates='order_items')
 
-class ServicePartQuantity(Base):
-    __tablename__ = 'service_part_quantity'
+class ServiceInventoryQuantity(Base):
+    __tablename__ = 'service_inventory_quantity'
 
     id: Mapped[int] = mapped_column(primary_key=True)
     service_ticket_id: Mapped[int] = mapped_column(db.ForeignKey('service_tickets.id'), nullable=False)
-    part_id: Mapped[int] = mapped_column(db.ForeignKey('parts.id'), nullable=False)
+    inventory_id: Mapped[int] = mapped_column(db.ForeignKey('inventory.id'), nullable=False)
     quantity: Mapped[int] = mapped_column(nullable=False)
 
     service_ticket: Mapped["ServiceTicket"] = db.relationship()
-    part: Mapped["Part"] = db.relationship()
+    inventory_item: Mapped["Inventory"] = db.relationship()
