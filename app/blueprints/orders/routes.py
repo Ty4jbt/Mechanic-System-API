@@ -26,7 +26,7 @@ def create_order():
     total_cost = 0.0
     order_items = []
 
-    for item_data in order_data['iventory_items']:
+    for item_data in order_data['inventory_items']:
         inventory_id = item_data['inventory_id']
         quantity = item_data['quantity']
 

@@ -264,7 +264,7 @@ def get_service_ticket_receipt(service_ticket_id):
     )
     quantity_relations = db.session.execute(quantity_query).scalars().all()
 
-    item = []
+    items = []
     total_cost = 0.0
 
     for relation in quantity_relations:

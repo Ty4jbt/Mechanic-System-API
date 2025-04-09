@@ -15,7 +15,7 @@ def create_inventory_item():
     new_item = Inventory(
         name=inventory_data['name'],
         price=inventory_data['price'],
-        quantity=inventory_data['quantity_in_stock', 0]
+        quantity_in_stock=inventory_data.get('quantity_in_stock', 0),
     )
 
     db.session.add(new_item)

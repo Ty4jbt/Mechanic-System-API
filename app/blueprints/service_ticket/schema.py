@@ -27,9 +27,9 @@ class EditServiceTickerSchema(ma.Schema):
 
 class AddInventorySchema(ma.Schema):
     inventory_ids = fields.List(fields.Int(), required=True)
-    quantities = fields.Int(required=True)
+    quantities = fields.List(fields.Int(), required=True)
     class Meta:
-        fields = ("part_ids", "quantities")
+        fields = ("inventory_ids", "quantities")
 
 class RecieptSchema(ma.Schema):
     total_cost = fields.Float(required=True)

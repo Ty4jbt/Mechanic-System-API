@@ -5,10 +5,12 @@ from marshmallow import fields
 class InventorySchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Inventory
+        include_all = True
 
 class InventoryDetailSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Inventory
+        include_all = True
 
     service_tickets = fields.Nested('ServiceTicketSchema', many=True, exclude=['id', 'inventory_items'])
 
