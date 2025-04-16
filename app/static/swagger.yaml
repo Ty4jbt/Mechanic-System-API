@@ -406,35 +406,35 @@ paths:
             $ref: '#/ServiceTicketInventoryResponse'
 
   /service_tickets/{service_ticket_id}/inventory/{inventory_id}:
-  delete:
-    tags:
-      - Service Tickets
-    summary: 'Remove inventory item from a service ticket'
-    description: 'An endpoint to remove an inventory item from a service ticket'
-    parameters:
-      - in: 'path'
-        name: 'service_ticket_id'
-        type: 'integer'
-        required: true
-        description: 'ID of the service ticket to remove inventory from'
-      - in: 'path'
-        name: 'inventory_id'
-        type: 'integer'
-        required: true
-        description: 'ID of the inventory item to remove'
-    responses:
-      200:
-        description: 'Inventory item removed successfully'
-        schema:
-          $ref: '#/definitions/MessageResponse'
-        examples:
-          application/json:
-            message: 'Inventory item removed successfully'
-      400:
-        description: 'Validation error or item not found'
-        examples:
-          application/json:
-            message: 'Item not found in service ticket'
+    delete:
+      tags:
+        - Service Tickets
+      summary: 'Remove inventory item from a service ticket'
+      description: 'An endpoint to remove an inventory item from a service ticket'
+      parameters:
+        - in: 'path'
+          name: 'service_ticket_id'
+          type: 'integer'
+          required: true
+          description: 'ID of the service ticket to remove inventory from'
+        - in: 'path'
+          name: 'inventory_id'
+          type: 'integer'
+          required: true
+          description: 'ID of the inventory item to remove'
+      responses:
+        200:
+          description: 'Inventory item removed successfully'
+          schema:
+            $ref: '#/definitions/MessageResponse'
+          examples:
+            application/json:
+              message: 'Inventory item removed successfully'
+        400:
+          description: 'Validation error or item not found'
+          examples:
+            application/json:
+              message: 'Item not found in service ticket'
 
   /service_tickets/{service_ticket_id}/receipt:
     get:
@@ -979,6 +979,21 @@ definitions:
     items:
       $ref: '#/definitions/ServiceTicketResponse'
 
+  UpdateServiceTicketPayload:
+    type: 'object'
+    properties:
+      add_mechanic_ids:
+        type: 'array'
+        items:
+          type: 'integer'
+      remove_mechanic_ids:
+        type: 'array'
+        items:
+          type: 'integer'
+    required:
+      - add_mechanic_ids
+      - remove_mechanic_ids
+
   CustomerInfo:
     type: 'object'
     properties:
@@ -1018,7 +1033,7 @@ definitions:
         items:
           type: 'integer'
     required:
-      - mechanic_ids
+      - add_mechanic_ids
       - remove_mechanic_ids
 
   AddInventoryPayload:
@@ -1045,7 +1060,7 @@ definitions:
           $ref: '#/definitions/InventoryInfo'
       items_with_quantity:
         type: 'array'
-        items":
+        items:
           type: 'object'
           properties:
             id:
@@ -1063,6 +1078,32 @@ definitions:
       total_cost:
         type: 'number'
         format: 'float'
+
+  ServiceTicketResponse:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      date_created:
+        type: 'string'
+        format: 'date'
+      desc:
+        type: 'string'
+      VIN:
+        type: 'string'
+      total_cost:
+        type: 'number'
+        format: 'float'
+      customer:
+        $ref: '#/definitions/CustomerInfo'
+      mechanics:
+        type: 'array'
+        items:
+          $ref: '#/definitions/MechanicInfo'
+      inventory_items:
+        type: 'array'
+        items:
+          $ref: '#/definitions/InventoryItemInfo'
 
   # Inventory Definitions
   CreateInventoryPayload:
@@ -1129,6 +1170,19 @@ definitions:
               type: 'string'
             VIN:
               type: 'string'
+
+  InventoryItemInfo:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      name: 
+        type: 'string'
+      price:
+        type: 'number'
+        format: 'float'
+      quantity_in_stock:
+        type: 'integer'
 
   AllInventoryItems:
     type: 'array'
@@ -1222,8 +1276,6 @@ definitions:
             unit_price:
               type: 'number'
               format: 'float'
-            quantity:
-              type: 'integer'
             total_price:
               type: 'number'
               format: 'float'
