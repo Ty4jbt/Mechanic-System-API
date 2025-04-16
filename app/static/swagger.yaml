@@ -19,6 +19,8 @@ securityDefinitions:
     in: 'header'
 
 paths:
+
+  # Customer Endpoints
   /customers/login:
     post:
       tags:
@@ -122,6 +124,596 @@ paths:
           examples:
             application/json:
               message: 'Successfully deleted customer <customer_id>'
+
+  # Mechanic Endpoints
+  /mechanics/login:
+    post:
+      tags:
+        - Mechanics
+      summary: 'Login endpoint, (generates token)'
+      description: 'Validates member credentials, generates and returns a mechanic specific token'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          description: 'Login credentials'
+          required: true
+          schema:
+            $ref: '#/definitions/LoginCredentials'
+      responses:
+        200:
+          description: 'Successful login'
+          schema:
+            $ref: '#/definitions/LoginResponse'
+          examples:
+            application/json:
+              token: 'kjsbvpiuahsenASDLKFJASLDJFLASDlll...'
+              message: 'Login successful'
+              status: 'success'
+
+  /mechanics:
+    post:
+      tags:
+        - Mechanics
+      summary: 'Endpoint to create/register a new mechanic'
+      description: 'Endpoint to create a new mechanic in our Mechanic system, email must be unique'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          description: 'Information required to create a new mechanic'
+          required: true
+          schema:
+            $ref: '#/definitions/CreateMechanicPayload'
+      responses:
+        201:
+          description: 'Mechanic created successfully'
+          schema:
+            $ref: '#/definitions/CreateMechanicResponse'
+        400:
+          desciption: 'Validation error'
+
+    get:
+      tags:
+        - Mechanics
+      summary: 'Endpoint to get all mechanics'
+      description: 'Endpoint to get all mechanics in our Mechanic system'
+      responses:
+        200:
+          description: 'Retrieved all mechanics successfully'
+          schema:
+            $ref: '#/definitions/AllMechanics'
+
+    put:
+      tags:
+        - Mechanics
+      summary: 'Endpoint to update a mechanic'
+      description: 'Endpoint to update a mechanic, this is a token authenticated route, and the user must be logged in to update their information'
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: 'body'
+          name: 'body'
+          description: 'Information required to update a mechanic'
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateMechanicPayload'
+      responses:
+        200:
+          description: 'Mechanic updated successfully'
+          schema:
+            $ref: '#/definitions/UpdateMechanicResponse'
+        401:
+          description: 'Unauthorized, invalid token'
+
+    delete:
+      tags:
+        - Mechanics
+      summary: 'Endpoint to delete a mechanic'
+      description: 'Endpoint to delete a mechanic, this is a token authenticated route, and the user must be logged in to delete their information'
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: 'Mechanic deleted successfully'
+          schema:
+            $ref: '#/definitions/DeleteMechanicResponse'
+        401:
+          description: 'Unauthorized, invalid token'
+
+  /mechanics/popular:
+    get:
+      tags:
+        - Mechanics
+      summary: 'Endpoint to get popular mechanics'
+      description: 'List mechanics sorted by popularity (number of service tickets)'
+      responses:
+        200:
+          description: 'Retrieved popular mechanics successfully'
+          schema:
+            $ref: '#/definitions/AllMechanics'
+
+  /mechanics/search:
+    get:
+      tags:
+        - Mechanics
+      summary: 'Endpoint to search for mechanics'
+      description: 'Search mechanics by name'
+      parameters:
+        - in: 'query'
+          name: 'name'
+          type: 'string'
+          description: 'Search query (name of the mechanic)'
+          required: true
+      responses:
+        200:
+          description: 'Retrieved search results successfully'
+          schema:
+            $ref: '#/definitions/AllMechanics'
+
+  # Service Ticket Endpoints
+  /service_tickets:
+    post:
+      tags:
+        - Service Tickets
+      summary: 'Endpoint to create a new service ticket'
+      description: 'Endpoint to create a new service ticket in our Mechanic system'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          description: 'Information required to create a new service ticket'
+          required: true
+          schema:
+            $ref: '#/definitions/CreateServiceTicketPayload'
+      responses:
+        201:
+          description: 'Service ticket created successfully'
+          schema:
+            $ref: '#/definitions/CreateServiceTicketResponse'
+        400:
+          description: 'Validation error'
+
+    get:
+      tags:
+        - Service Tickets
+      summary: 'Endpoint to get all service tickets'
+      description: 'Endpoint to get all service tickets in our Mechanic system'
+      responses:
+        200:
+          description: 'Retrieved all service tickets successfully'
+          schema:
+            $ref: '#/definitions/AllServiceTickets'
+
+  /service_tickets/{service_ticket_id}:
+    put:
+      tags:
+        - Service Tickets
+      summary: 'Endpoint to update a service ticket'
+      description: 'Add or remove mechanics from a service ticket'
+      parameters:
+        - in: 'path'
+          name: 'service_ticket_id'
+          type: 'integer'
+          required: true
+          description: 'ID of the service ticket to update'
+        - in: 'body'
+          name: 'body'
+          description: 'Mechanics to add or remove from the service ticket'
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateServiceTicketPayload'
+      responses:
+        200:
+          description: 'Service ticket updated successfully'
+          schema:
+            $ref: '#/definitions/UpdateServiceTicketResponse'
+
+    delete:
+      tags:
+        - Service Tickets
+      summary: 'Endpoint to delete a service ticket'
+      description: 'Endpoint to delete a service ticket in our Mechanic system'
+      parameters:
+        - in: 'path'
+          name: 'service_ticket_id'
+          type: 'integer'
+          required: true
+          description: 'ID of the service ticket to delete'
+      responses:
+        200:
+          description: 'Service ticket deleted successfully'
+          schema:
+            $ref: '#/definitions/DeleteServiceTicketResponse'
+
+  /service_tickets/my-tickets:
+    get:
+      tags:
+        - Service Tickets
+      summary: 'Endpoint to get customer service tickets'
+      description: 'Endpoint to get all service tickets assigned to the logged-in customer'
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: 'Retrieved my service tickets successfully'
+          schema:
+            $ref: '#/definitions/AllServiceTickets'
+
+  /service_tickets/{service_ticket_id}/inventory:
+    post:
+      tags:
+        - Service Tickets
+      summary: 'Endpoint to add inventory to a service ticket'
+      description: 'Endpoint to add inventory to a service ticket and generate a receipt'
+      parameters:
+        - in: 'path'
+          name: 'service_ticket_id'
+          type: 'integer'
+          required: true
+          description: 'ID of the service ticket to add inventory to'
+        - in: 'body'
+          name: 'body'
+          description: 'Inventory items and quantities to add'
+          required: true
+          schema:
+            $ref: '#/definitions/AddInventoryPayload'
+      responses:
+        201:
+          description: 'Inventory added successfully'
+          schema:
+            $ref: '#/definitions/ReceiptResponse'
+          examples:
+            application/json:
+              total_cost: 150.00
+              service_ticket:
+                id: 1
+                date_created: '2023-10-01'
+                desc: 'Oil change'
+                VIN: "1HGCM82633A123456"
+                total_cost: 150.00
+                customer:
+                  id: 2
+                  name: 'Jane Doe'
+                  email: 'jane@email.com'
+                items:
+                  - id: 1
+                    name: 'Oil Filter'
+                    quantity: 1
+                    cost: 50.00
+                  - id: 2
+                    name: 'Engine Oil'
+                    quantity: 5
+                    cost: 20.00
+        400:
+          description: 'Validation error or insufficient inventory'
+          examples:
+            application/json:
+              message: 'Insufficient inventory for item <item_id>'
+
+    get:
+      tags:
+        - Service Tickets
+      summary: 'Endpoint to get inventory for a service ticket'
+      description: 'Endpoint to get all inventory items for a service ticket'
+      parameters:
+        - in: 'path'
+          name: 'service_ticket_id'
+          type: 'integer'
+          required: true
+          description: 'ID of the service ticket to get inventory for'
+      responses:
+        200:
+          description: 'Retrieved inventory successfully'
+          schema:
+            $ref: '#/ServiceTicketInventoryResponse'
+
+  /service_tickets/{service_ticket_id}/inventory/{inventory_id}:
+  delete:
+    tags:
+      - Service Tickets
+    summary: 'Remove inventory item from a service ticket'
+    description: 'An endpoint to remove an inventory item from a service ticket'
+    parameters:
+      - in: 'path'
+        name: 'service_ticket_id'
+        type: 'integer'
+        required: true
+        description: 'ID of the service ticket to remove inventory from'
+      - in: 'path'
+        name: 'inventory_id'
+        type: 'integer'
+        required: true
+        description: 'ID of the inventory item to remove'
+    responses:
+      200:
+        description: 'Inventory item removed successfully'
+        schema:
+          $ref: '#/definitions/MessageResponse'
+        examples:
+          application/json:
+            message: 'Inventory item removed successfully'
+      400:
+        description: 'Validation error or item not found'
+        examples:
+          application/json:
+            message: 'Item not found in service ticket'
+
+  /service_tickets/{service_ticket_id}/receipt:
+    get:
+      tags:
+        - Service Tickets
+      summary: 'Endpoint to get receipt for a service ticket'
+      description: 'Endpoint to get the receipt for a service ticket'
+      parameters:
+        - in: 'path'
+          name: 'service_ticket_id'
+          type: 'integer'
+          required: true
+          description: 'ID of the service ticket to get the receipt for'
+      responses:
+        200:
+          description: 'Retrieved receipt successfully'
+          schema:
+            $ref: '#/definitions/ReceiptResponse'
+
+  # Inventory Routes
+  /inventory:
+    post:
+      tags:
+        - Inventory
+      summary: 'Create an inventory item'
+      description: 'Create a new inventory item'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          description: 'Information required to create an inventory item'
+          required: true
+          schema:
+            $ref: '#/definitions/CreateInventoryPayload'
+      responses:
+        201:
+          description: 'Inventory item created successfully'
+          schema:
+            $ref: '#/definitions/InventoryResponse'
+
+    get:
+      tags:
+        - Inventory
+      summary: 'Get all inventory items'
+      description: 'Retrieve all inventory items'
+      responses:
+        200:
+          description: 'Retrieved all inventory items successfully'
+          schema:
+            $ref: '#/definitions/AllInventoryItems'
+
+  /inventory/{inventory_id}:
+    get:
+      tags:
+        - Inventory
+      summary: 'Get inventory item'
+      description: 'Get a specific inventory item by ID'
+      parameters:
+        - in: 'path'
+          name: 'inventory_id'
+          type: 'integer'
+          required: true
+          description: 'ID of the inventory item'
+      responses:
+        200:
+          description: 'Retrieved inventory item successfully'
+          schema:
+            $ref: '#/definitions/InventoryDetailResponse'
+        404:
+          description: 'Inventory item not found'
+
+    put:
+      tags:
+        - Inventory
+      summary: 'Update inventory item'
+      description: 'Update an inventory item based on ID'
+      parameters:
+        - in: 'path'
+          name: 'inventory_id'
+          type: 'integer'
+          required: true
+          descrtiption: 'ID of the inventory item to update'
+        - in: 'body'
+          name: 'body'
+          description: 'Information required to update an inventory item'
+          required: true
+          schema:
+            $ref: '#/definitions/UpdateInventoryPayload'
+      responses:
+        200:
+          description: 'Inventory item updated successfully'
+          schema:
+            $ref: '#/definitions/InventoryResponse'
+        404:
+          description: 'Inventory item not found'
+
+    delete:
+      tags:
+        - Inventory
+      summary: 'Delete inventory item'
+      description: 'Delete an inventory item based on ID'
+      parameters:
+        - in: 'path'
+          name: 'inventory_id'
+          type: 'integer'
+          required: true
+          description: 'ID of the inventory item to delete'
+      responses:
+        200:
+          description: 'Inventory item deleted successfully'
+          schema:
+            $ref: '#/definitions/MessageResponse'
+        404:
+          description: 'Inventory item not found'
+
+  /inventory/popular:
+    get:
+      tags:
+        - Inventory
+      summary: 'Get popular inventory items'
+      description: 'Retrieve popular inventory items based on sales'
+      responses:
+        200:
+          description: 'Retrieved popular inventory items successfully'
+          schema:
+            $ref: '#/definitions/AllInventoryItems'
+
+  /inventory/search:
+    get:
+      tags:
+        - Inventory
+      summary: 'Search inventory items'
+      description: 'Search for inventory items by name'
+      parameters:
+        - in: 'query'
+          name: 'name'
+          type: 'string'
+          description: 'Search query (name of the inventory item)'
+          required: true
+      responses:
+        200:
+          description: 'Retrieved search results successfully'
+          schema:
+            $ref: '#/definitions/AllInventoryItems'
+
+  /inventory/low-stock:
+    get:
+      tags:
+        - Inventory
+      summary: 'Get low stock inventory items'
+      description: 'Retrieve inventory items that are low in stock'
+      parameters:
+        - in: 'query'
+          name: 'threshold'
+          type: 'integer'
+          description: 'Threshold for low stock (default is 5)'
+          required: false
+      responses:
+        200:
+          description: 'Retrieved low stock inventory items successfully'
+          schema:
+            $ref: '#/definitions/AllInventoryItems'
+          examples:
+            application/json:
+              - id: 1
+                name: 'Oil Filter'
+                quantity_in_stock: 2
+                price: 10.00
+              - id: 2
+                name: 'Brake Pads'
+                quantity_in_stock: 3
+                price: 25.00
+
+  # Order Routes
+  /orders:
+    post:
+      tags:
+        - Orders
+      summary: 'Create an order'
+      description: 'Create a new order to restock inventory'
+      parameters:
+        - in: 'body'
+          name: 'body'
+          description: 'Information required to create an order'
+          required: true
+          schema:
+            $ref: '#/definitions/CreateOrderPayload'
+          examples:
+            application/json:
+              mechanic_id: 1
+              inventory_items:
+                - id: 1
+                  quantity: 5
+                - id: 2
+                  quantity: 10
+      responses:
+        201:
+          description: 'Order created successfully'
+          schema:
+            $ref: '#/definitions/OrderResponse'
+          examples:
+            application/json:
+              total_cost: 150.00
+              order:
+                id: 1
+                order_date: '2023-10-01'
+                mechanic_id: 1
+                total_cost: 150.00
+                order_items:
+                  - id: 1
+                    name: 'Oil Filter'
+                    quantity: 5
+                    cost: 50.00
+                  - id: 2
+                    name: 'Brake Pads'
+                    quantity: 10
+                    cost: 100.00
+        400:
+          description: 'Validation error'
+          examples:
+            application/json:
+              message: "Validation failed"
+              errors:
+                mechanic_id: ["Field is required"]
+        404:
+          description: 'Inventory item not found'
+          examples:
+            application/json:
+              message: "Inventory item with ID not found"
+
+    get:
+      tags:
+        - Orders
+      summary: 'Get all orders'
+      description: 'Retrieve all orders for a customer'
+      responses:
+        200:
+          description: 'Retrieved all orders successfully'
+          schema:
+            $ref: '#/definitions/AllOrders'
+
+  /orders/{order_id}:
+    get:
+      tags:
+        - Orders
+      summary: 'Get order by ID'
+      description: 'Get a specific order by ID'
+      parameters:
+        - in: 'path'
+          name: 'order_id'
+          type: 'integer'
+          required: true
+          description: 'ID of the order'
+      responses:
+        200:
+          description: 'Retrieved order successfully'
+          schema:
+            $ref: '#/definitions/OrderResponse'
+        404:
+          description: 'Order not found'
+
+  /orders/{order_id}/receipt:
+    get:
+      tags:
+        - Orders
+      summary: 'Get order receipt'
+      description: 'Get a detailed receipt for an order'
+      parameters:
+        - in: 'path'
+          name: 'order_id'
+          type: 'integer'
+          required: true
+          description: 'ID of the order'
+      responses:
+        200:
+          description: 'Receipt retrieved successfully'
+          schema:
+            $ref: '#/definitions/ReceiptResponse'
+        404:
+          description: 'Order not found'
 
 definitions:
 
@@ -229,3 +821,421 @@ definitions:
     properties:
       message:
         type: 'string'
+
+  # Mechanic Definitions
+  CreateMechanicPayload:
+    type: 'object'
+    properties:
+      name:
+        type: 'string'
+      email:
+        type: 'string'
+      password:
+        type: 'string'
+      phone:
+        type: 'string'
+      salary:
+        type: 'number'
+        format: 'float'
+    required:
+      - name
+      - email
+      - password
+      - phone
+      - salary
+
+  CreateMechanicResponse:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      name:
+        type: 'string'
+      email:
+        type: 'string'
+      password:
+        type: 'string'
+      phone:
+        type: 'string'
+      salary:
+        type: 'number'
+        format: 'float'
+
+  AllMechanics:
+    type: 'array'
+    items:
+      type: 'object'
+      properties:
+        id:
+          type: 'integer'
+        name:
+          type: 'string'
+        email:
+          type: 'string'
+        password:
+          type: 'string'
+        phone:
+          type: 'string'
+        salary:
+          type: 'number'
+          format: 'float'
+
+  UpdateMechanicPayload:
+    type: 'object'
+    properties:
+      name:
+        type: 'string'
+      email:
+        type: 'string'
+      password:
+        type: 'string'
+      phone:
+        type: 'string'
+      salary:
+        type: 'number'
+        format: 'float'
+    required:
+      - name
+      - email
+      - password
+      - phone
+      - salary
+
+  UpdateMechanicResponse:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      name:
+        type: 'string'
+      email:
+        type: 'string'
+      password:
+        type: 'string'
+      phone:
+        type: 'string'
+      salary:
+        type: 'number'
+        format: 'float'
+
+  DeleteMechanicResponse:
+    type: 'object'
+    properties:
+      message:
+        type: 'string'
+
+  # Service Ticket Definitions
+  CreateServiceTicketPayload:
+    type: 'object'
+    properties:
+      date_created:
+        type: 'string'
+        format: 'date'
+      desc:
+        type: 'string'
+      VIN:
+        type: 'string'
+      customer_id:
+        type: 'integer'
+      mechanic_ids:
+        type: 'array'
+        items:
+          type: 'integer'
+    required:
+      - date_created
+      - desc
+      - VIN
+      - customer_id
+      - mechanic_ids
+
+  CreateServiceTicketResponse:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      date_created:
+        type: 'string'
+        format: 'date'
+      desc:
+        type: 'string'
+      VIN:
+        type: 'string'
+      total_cost:
+        type: 'number'
+        format: 'float'
+      customer:
+        $ref: '#/definitions/CustomerInfo'
+      mechanics:
+        type: 'array'
+        items:
+          $ref: '#/definitions/MechanicInfo'
+      inventory_items:
+        type: 'array'
+        items:
+          $ref: '#/definitions/InventoryItemInfo'
+
+  AllServiceTickets:
+    type: 'array'
+    items:
+      $ref: '#/definitions/ServiceTicketResponse'
+
+  CustomerInfo:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      name:
+        type: 'string'
+      email:
+        type: 'string'
+      phone:
+        type: 'string'
+
+  MechanicInfo:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      name:
+        type: 'string'
+      email:
+        type: 'string'
+      phone:
+        type: 'string'
+      salary:
+        type: 'number'
+        format: 'float'
+
+  UpdateServiceMechanicsPayload:
+    type: 'object'
+    properties:
+      add_mechanic_ids:
+        type: 'array'
+        items:
+          type: 'integer'
+      remove_mechanic_ids:
+        type: 'array'
+        items:
+          type: 'integer'
+    required:
+      - mechanic_ids
+      - remove_mechanic_ids
+
+  AddInventoryPayload:
+    type: 'object'
+    properties:
+      inventory_ids:
+        type: 'array'
+        items:
+          type: 'integer'
+      quantities:
+        type: 'array'
+        items:
+          type: 'integer'
+    required:
+      - inventory_ids
+      - quantities
+
+  ServiceTicketInventoryResponse:
+    type: 'object'
+    properties:
+      items:
+        type: 'array'
+        items:
+          $ref: '#/definitions/InventoryInfo'
+      items_with_quantity:
+        type: 'array'
+        items":
+          type: 'object'
+          properties:
+            id:
+              type: 'integer'
+            name:
+              type: 'string'
+            price:
+              type: 'number'
+              format: 'float'
+            quantity:
+              type: 'integer'
+            total_price:
+              type: 'number'
+              format: 'float'
+      total_cost:
+        type: 'number'
+        format: 'float'
+
+  # Inventory Definitions
+  CreateInventoryPayload:
+    type: 'object'
+    properties:
+      name:
+        type: 'string'
+      quantity_in_stock:
+        type: 'integer'
+      price:
+        type: 'number'
+        format: 'float'
+    required:
+      - name
+      - price
+
+  InventoryResponse:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      name:
+        type: 'string'
+      quantity_in_stock:
+        type: 'integer'
+      price:
+        type: 'number'
+        format: 'float'
+
+  InventoryInfo:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      name:
+        type: 'string'
+      quantity_in_stock:
+        type: 'integer'
+      price:
+        type: 'number'
+        format: 'float'
+
+  InventoryDetailResponse:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      name:
+        type: 'string'
+      quantity_in_stock:
+        type: 'integer'
+      price:
+        type: 'number'
+        format: 'float'
+      service_tickets:
+        type: 'array'
+        items:
+          type: 'object'
+          properties:
+            date_created:
+              type: 'string'
+              format: 'date'
+            desc:
+              type: 'string'
+            VIN:
+              type: 'string'
+
+  AllInventoryItems:
+    type: 'array'
+    items:
+      $ref: '#/definitions/InventoryResponse'
+
+  UpdateInventoryPayload:
+    type: 'object'
+    properties:
+      name:
+        type: 'string'
+      quantity_in_stock:
+        type: 'integer'
+      price:
+        type: 'number'
+        format: 'float'
+    required:
+      - name
+      - quantity_in_stock
+      - price
+
+  # Order Definitions
+  CreateOrderPayload:
+    type: 'object'
+    properties:
+      mechanic_id:
+        type: 'integer'
+      inventory_items:
+        type: 'array'
+        items:
+          type: 'object'
+          properties:
+            inventory_id:
+              type: 'integer'
+            quantity:
+              type: 'integer'
+          required:
+            - inventory_id
+            - quantity
+    required:
+      - mechanic_id
+      - inventory_items
+
+  OrderResponse:
+    type: 'object'
+    properties:
+      id:
+        type: 'integer'
+      order_date:
+        type: 'string'
+        format: 'date'
+      mechanic_id:
+        type: 'integer'
+      total_cost:
+        type: 'number'
+        format: 'float'
+      order_items:
+        type: 'array'
+        items:
+          type: 'object'
+          properties:
+            inventory_items:
+                $ref: '#/definitions/InventoryInfo'
+
+  AllOrders:
+    type: 'array'
+    items:
+      $ref: '#/definitions/OrderResponse'
+
+  ReceiptResponse:
+    type: 'object'
+    properties:
+      total_cost:
+        type: 'number'
+        format: 'float'
+      service_ticket:
+        $ref: '#/definitions/ServiceTicketResponse'
+      order:
+        $ref: '#/definitions/OrderResponse'
+      items:
+        type: 'array'
+        items:
+          type: 'object'
+          properties:
+            id:
+              type: 'integer'
+            name:
+              type: 'string'
+            quantity:
+              type: 'integer'
+            unit_price:
+              type: 'number'
+              format: 'float'
+            quantity:
+              type: 'integer'
+            total_price:
+              type: 'number'
+              format: 'float'
+
+  MessageResponse:
+    type: 'object'
+    properties:
+      message:
+        type: 'string'
+      inventory_id:
+        type: 'integer'
+      service_ticket_id:
+        type: 'integer'
+      quantity:
+        type: 'integer'
