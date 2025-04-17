@@ -1,5 +1,6 @@
 from app import create_app
 from app.models import db, Customer
+from app.utils import encode_token
 import unittest
 
 class TestCustomer(unittest.TestCase):
