@@ -50,6 +50,7 @@ class TestCustomer(unittest.TestCase):
         return response.json['token']
     
     def test_invalid_login(self):
+        # Test with invalid credentials
         credentials = {
             'email': 'bad_email@email.com',
             'password': 'wrongpassword'
@@ -62,9 +63,9 @@ class TestCustomer(unittest.TestCase):
     def test_update_customer(self):
         update_payload = {
             'name': 'Updated Name',
-            'phone': '',
-            'email': '',
-            'password': ''
+            'phone': '9876543210',
+            'email': 'updated@email.com',
+            'password': 'newpassword123'
         }
 
         headers = {'Authorization': 'Bearer ' + self.test_login_customer()}

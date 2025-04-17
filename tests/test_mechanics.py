@@ -1,6 +1,6 @@
 from app import create_app
 from app.models import db, Mechanic
-from app.utils import encode_mechanic_token
+from app.utils.util import encode_mechanic_token
 import unittest
 
 class TestMechanic(unittest.TestCase):
@@ -49,6 +49,16 @@ class TestMechanic(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_login_mechanic(self):
+        mechanic_payload = {
+            'name': 'Jane Doe',
+            'email': 'jd@auto.com',
+            'phone': '9876543210',
+            'password': 'mechanicpassword',
+            'salary': 60000.0,
+        }
+
+        self.client.post('/mechanics', json=mechanic_payload)
+
         credentials = {
             'email': 'jd@auto.com',
             'password': 'mechanicpassword'
@@ -99,7 +109,10 @@ class TestMechanic(unittest.TestCase):
 
         response = self.client.delete('/mechanics/', headers=headers)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json['message'], 'successfully deleted mechanic {mechanic_id}')
+
+        mechanic_id = 2
+        expected_message = f'successfully deleted mechanic {mechanic_id}'
+        self.assertEqual(response.json['message'], expected_message)
 
     def test_popular_mechanics(self):
         response = self.client.get('/mechanics/popular')

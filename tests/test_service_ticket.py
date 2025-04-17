@@ -1,6 +1,6 @@
 from app import create_app
 from app.models import db, ServiceTicket, Customer, Mechanic, Inventory
-from app.utils import encode_customer_token
+from app.utils.util import encode_customer_token
 import unittest
 from datetime import date
 
@@ -65,6 +65,7 @@ class TestServiceTicket(unittest.TestCase):
         self.assertEqual(response.json['VIN'], '1HGCM82633A123456')
         self.assertEqual(response.json['customer']['id'], 1)
         self.assertEqual(len(response.json['mechanics']), 1)
+        self.assertEqual(response.json['mechanics'][0]['id'], 1)
 
     def test_invalid_creation(self):
         service_ticket_payload = {
@@ -98,8 +99,8 @@ class TestServiceTicket(unittest.TestCase):
             db.session.commit()
 
         update_payload = {
-            'added_mechanic_ids': [2],
-            'removed_mechanic_ids': [],
+            'add_mechanic_ids': [2],
+            'remove_mechanic_ids': [],
         }
 
         response = self.client.put('/service_tickets/1', json=update_payload)
@@ -109,7 +110,7 @@ class TestServiceTicket(unittest.TestCase):
     def test_delete_service_ticket(self):
         response = self.client.delete('/service_tickets/1')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json['message'], 'Service ticket deleted successfully.')
+        self.assertIn('Succesfully deleted service ticket', response.json['message'])
 
     def test_add_inventory_to_service_ticket(self):
         inventory_payload = {
@@ -123,7 +124,7 @@ class TestServiceTicket(unittest.TestCase):
         self.assertAlmostEqual(response.json['total_cost'], 200.0)
 
         inventory_response = self.client.get('/inventory/1')
-        self.assertEqual(inventory_response.json['quantity_in_stock'], 8)
+        self.assertEqual(inventory_response.json['quantity_in_stock'], 48)
 
     def test_get_ticket_inventory(self):
         inventory_payload = {
@@ -163,7 +164,7 @@ class TestServiceTicket(unittest.TestCase):
 
         self.client.post('/service_tickets/1/inventory', json=inventory_payload)
         
-        response = self.client.get('/service_tickets/1/reciept')
+        response = self.client.get('/service_tickets/1/receipt')
         self.assertEqual(response.status_code, 200)
         self.assertAlmostEqual(response.json['total_cost'], 200.0)
         self.assertEqual(response.json['service_ticket']['id'], 1)

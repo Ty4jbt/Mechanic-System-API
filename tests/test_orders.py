@@ -30,6 +30,9 @@ class TestOrders(unittest.TestCase):
         self.client = self.app.test_client()
 
     def test_create_order(self):
+        initial_inventory = self.client.get('/inventory/1')
+        initial_quantity = initial_inventory.json['quantity_in_stock']
+
         order_payload = {
             'mechanic_id': 1,
             'inventory_items': [
@@ -41,12 +44,25 @@ class TestOrders(unittest.TestCase):
         }
 
         response = self.client.post('/orders', json=order_payload)
+
         self.assertEqual(response.status_code, 201)
-        self.assertAlmostEqual(response.json['total_cost'], 200.0)
+        self.assertAlmostEqual(response.json['total_cost'], 200.0, places=2)
         self.assertEqual(response.json['order']['mechanic_id'], 1)
 
+        order_response = self.client.get('/orders/1')
+        self.assertEqual(order_response.status_code, 200)
+        self.assertEqual(order_response.json['id'], 1)
+
+        self.assertTrue('order_items' in order_response.json)
+        self.assertEqual(len(order_response.json['order_items']), 1)
+
         inventory_response = self.client.get('/inventory/1')
-        self.assertEqual(inventory_response.json['quantity_in_stock'], 52)
+        expected_quantity = initial_quantity + 2
+        self.assertEqual(inventory_response.json['quantity_in_stock'], expected_quantity)
+
+        receipt_response = self.client.get('/orders/1/receipt')
+        self.assertEqual(receipt_response.status_code, 200)
+        self.assertAlmostEqual(receipt_response.json['total_cost'], 200.0, places=2)
 
     def test_invalid_creation(self):
         order_payload = {
