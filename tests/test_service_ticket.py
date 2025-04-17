@@ -1,6 +1,6 @@
 from app import create_app
 from app.models import db, ServiceTicket, Customer, Mechanic, Inventory
-from app.utils import encode_token
+from app.utils import encode_customer_token
 import unittest
 from datetime import date
 
@@ -56,7 +56,7 @@ class TestServiceTicket(unittest.TestCase):
             "desc": "Test description",
             "VIN": "1HGCM82633A123456",
             "date_created": date.today().isoformat(),
-            "mechanics": [1]
+            "mechanic_ids": [1]
         }
 
         response = self.client.post('/service_tickets', json=service_ticket_payload)
@@ -98,8 +98,8 @@ class TestServiceTicket(unittest.TestCase):
             db.session.commit()
 
         update_payload = {
-            'added_mechanics': [2],
-            'removed_mechanics': [],
+            'added_mechanic_ids': [2],
+            'removed_mechanic_ids': [],
         }
 
         response = self.client.put('/service_tickets/1', json=update_payload)
@@ -113,8 +113,8 @@ class TestServiceTicket(unittest.TestCase):
 
     def test_add_inventory_to_service_ticket(self):
         inventory_payload = {
-            "inventory_id": [1],
-            "quantity": [2]
+            "inventory_ids": [1],
+            "quantities": [2]
         }
 
         response = self.client.post('/service_tickets/1/inventory', json=inventory_payload)
@@ -173,7 +173,7 @@ class TestServiceTicket(unittest.TestCase):
 
     def test_get_customer_tickets(self):
         with self.app.app_context():
-            token = encode_token(1)
+            token = encode_customer_token(1)
         
         headers = {'Authorization': 'Bearer ' + token}
         

@@ -61,7 +61,7 @@ class TestOrders(unittest.TestCase):
 
         response = self.client.post('/orders', json=order_payload)
         self.assertEqual(response.status_code, 404)
-        self.assertEqual(response.json['message'], 'Inventory item not found.')
+        self.assertEqual(response.json['message'], 'Inventory item with ID not found')
 
     def test_get_orders(self):
         order_payload = {

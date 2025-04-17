@@ -1,6 +1,6 @@
 from app import create_app
 from app.models import db, Customer
-from app.utils import encode_token
+from app.utils import encode_customer_token
 import unittest
 
 class TestCustomer(unittest.TestCase):
@@ -12,7 +12,7 @@ class TestCustomer(unittest.TestCase):
             db.create_all()
             db.session.add(self.customer)
             db.session.commit()
-        self.token = encode_token(1, 'admin')
+        self.token = encode_customer_token(1)
         self.client = self.app.test_client()
 
     def test_create_customer(self):
@@ -57,7 +57,7 @@ class TestCustomer(unittest.TestCase):
 
         response = self.client.post('/customers/login', json=credentials)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json['message'], 'Invalid email or password.')
+        self.assertEqual(response.json['message'], 'Invalid email or password')
 
     def test_update_customer(self):
         update_payload = {
@@ -67,7 +67,7 @@ class TestCustomer(unittest.TestCase):
             'password': ''
         }
 
-        headers = {'Authorization': 'Bearer' + self.test_login_customer()}
+        headers = {'Authorization': 'Bearer ' + self.test_login_customer()}
 
         response = self.client.put('/customers/', json=update_payload, headers=headers)
         self.assertEqual(response.status_code, 200)

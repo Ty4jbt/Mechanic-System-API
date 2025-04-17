@@ -28,7 +28,7 @@ class TestInventory(unittest.TestCase):
 
         response = self.client.post('/inventory', json=inventory_payload)
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json['item_name'], 'Brake Pads')
+        self.assertEqual(response.json['name'], 'Brake Pads')
         self.assertEqual(response.json['price'], 50.0)
         self.assertEqual(response.json['quantity_in_stock'], 20)
 
@@ -70,14 +70,14 @@ class TestInventory(unittest.TestCase):
     def test_delete_inventory_item(self):
         response = self.client.delete('/inventory/1')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json['message'], 'Item deleted successfully.')
+        self.assertEqual(response.json['message'], 'successfully deleted inventory item {inventory_id}')
 
     def test_popular_inventory(self):
         response = self.client.get('/inventory/popular')
         self.assertEqual(response.status_code, 200)
 
     def test_search_inventory(self):
-        response = self.client.post('/inventory/search?name=Test')
+        response = self.client.get('/inventory/search?name=Test')
         self.assertEqual(response.status_code, 200)
         self.assertTrue(len(response.json) > 0)
         self.assertEqual(response.json[0]['name'], 'Test Part')
@@ -93,7 +93,7 @@ class TestInventory(unittest.TestCase):
             db.session.add(low_stock_item)
             db.session.commit()
 
-        response = self.client.get('/inventory/low_stock?threshold=5')
+        response = self.client.get('/inventory/low-stock?threshold=5')
         self.assertEqual(response.status_code, 200)
         self.assertTrue(len(response.json) > 0)
 

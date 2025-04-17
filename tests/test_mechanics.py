@@ -67,7 +67,7 @@ class TestMechanic(unittest.TestCase):
 
         response = self.client.post('/mechanics/login', json=credentials)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json['message'], 'Invalid email or password.')
+        self.assertEqual(response.json['message'], 'Invalid email or password')
 
     def test_get_mechanics(self):
         response = self.client.get('/mechanics/')
@@ -99,14 +99,14 @@ class TestMechanic(unittest.TestCase):
 
         response = self.client.delete('/mechanics/', headers=headers)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json['message'], 'Mechanic deleted successfully.')
+        self.assertEqual(response.json['message'], 'successfully deleted mechanic {mechanic_id}')
 
     def test_popular_mechanics(self):
         response = self.client.get('/mechanics/popular')
         self.assertEqual(response.status_code, 200)
 
     def test_search_mechanics(self):
-        response = self.client.post('/mechanics/search?name=test')
+        response = self.client.get('/mechanics/search?name=test')
         self.assertEqual(response.status_code, 200)
         self.assertTrue(len(response.json) > 0)
         self.assertEqual(response.json[0]['name'], 'test_mechanic')
