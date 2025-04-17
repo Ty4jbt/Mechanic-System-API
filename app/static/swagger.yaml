@@ -4,9 +4,9 @@ info:
   title: 'Mechanic API'
   description: 'API for Mechanics'
   version: '1.0.0'
-host: '127.0.0.1:5000'
+host: 'mechanic-system-api.onrender.com'
 schemes:
-  - 'http'
+  - 'https'
 consumes:
   - 'application/json'
 produces:
