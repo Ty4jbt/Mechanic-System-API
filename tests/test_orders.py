@@ -43,7 +43,7 @@ class TestOrders(unittest.TestCase):
             ]
         }
 
-        response = self.client.post('/orders', json=order_payload)
+        response = self.client.post('/orders/', json=order_payload)
 
         self.assertEqual(response.status_code, 201)
         self.assertAlmostEqual(response.json['total_cost'], 200.0, places=2)
@@ -75,7 +75,7 @@ class TestOrders(unittest.TestCase):
             ]
         }
 
-        response = self.client.post('/orders', json=order_payload)
+        response = self.client.post('/orders/', json=order_payload)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(response.json['message'], 'Inventory item with ID not found')
 
@@ -90,9 +90,9 @@ class TestOrders(unittest.TestCase):
             ]
         }
 
-        self.client.post('/orders', json=order_payload)
+        self.client.post('/orders/', json=order_payload)
 
-        response = self.client.get('/orders')
+        response = self.client.get('/orders/')
         self.assertEqual(response.status_code, 200)
         self.assertTrue(len(response.json) > 0)
         self.assertEqual(response.json[0]['mechanic_id'], 1)
@@ -108,7 +108,7 @@ class TestOrders(unittest.TestCase):
             ]
         }
 
-        self.client.post('/orders', json=order_payload)
+        self.client.post('/orders/', json=order_payload)
 
         response = self.client.get('/orders/1')
         self.assertEqual(response.status_code, 200)
@@ -126,7 +126,7 @@ class TestOrders(unittest.TestCase):
             ]
         }
 
-        self.client.post('/orders', json=order_payload)
+        self.client.post('/orders/', json=order_payload)
 
         response = self.client.get('/orders/1/receipt')
         self.assertEqual(response.status_code, 200)

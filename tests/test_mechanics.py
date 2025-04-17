@@ -31,7 +31,7 @@ class TestMechanic(unittest.TestCase):
             'salary': 60000.0,
         }
 
-        response = self.client.post('/mechanics', json=mechanic_payload)
+        response = self.client.post('/mechanics/', json=mechanic_payload)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json['name'], 'Jane Doe')
         self.assertEqual(response.json['salary'], 60000.0)
@@ -45,7 +45,7 @@ class TestMechanic(unittest.TestCase):
             # Missing salary
         }
 
-        response = self.client.post('/mechanics', json=mechanic_payload)
+        response = self.client.post('/mechanics/', json=mechanic_payload)
         self.assertEqual(response.status_code, 400)
 
     def test_login_mechanic(self):
@@ -57,7 +57,7 @@ class TestMechanic(unittest.TestCase):
             'salary': 60000.0,
         }
 
-        self.client.post('/mechanics', json=mechanic_payload)
+        self.client.post('/mechanics/', json=mechanic_payload)
 
         credentials = {
             'email': 'jd@auto.com',
@@ -91,7 +91,7 @@ class TestMechanic(unittest.TestCase):
         update_payload = {
             'name': 'Updated Mechanic',
             'phone': '1234567890',
-            'email': 'mechanic@test.com',
+            'email': 'jd@auto.com',
             'password': 'newpassword',
             'salary': 70000.0,
         }

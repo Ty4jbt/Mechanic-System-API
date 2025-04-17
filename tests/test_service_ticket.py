@@ -40,7 +40,7 @@ class TestServiceTicket(unittest.TestCase):
                 date_created=date.today(),
                 desc='Test description',
                 VIN='1HGCM82633A123456',
-                total_cost=200.0,
+                total_cost=0.0,
             )
 
             self.service_ticket.mechanics.append(self.mechanic)
@@ -59,7 +59,7 @@ class TestServiceTicket(unittest.TestCase):
             "mechanic_ids": [1]
         }
 
-        response = self.client.post('/service_tickets', json=service_ticket_payload)
+        response = self.client.post('/service_tickets/', json=service_ticket_payload)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json['desc'], 'Test description')
         self.assertEqual(response.json['VIN'], '1HGCM82633A123456')
@@ -76,11 +76,11 @@ class TestServiceTicket(unittest.TestCase):
             "mechanics": [1]
         }
 
-        response = self.client.post('/service_tickets', json=service_ticket_payload)
+        response = self.client.post('/service_tickets/', json=service_ticket_payload)
         self.assertEqual(response.status_code, 400)
 
     def test_get_service_tickets(self):
-        response = self.client.get('/service_tickets')
+        response = self.client.get('/service_tickets/')
         self.assertEqual(response.status_code, 200)
         self.assertTrue(len(response.json) > 0)
         self.assertEqual(response.json[0]['desc'], 'Test description')

@@ -1,6 +1,6 @@
 from app import create_app
 from app.models import db, Customer
-from app.utils import encode_customer_token
+from app.utils.util import encode_customer_token
 import unittest
 
 class TestCustomer(unittest.TestCase):
@@ -23,7 +23,7 @@ class TestCustomer(unittest.TestCase):
             "password": "password123"
         }
 
-        response = self.client.post('/customers', json=customer_payload)
+        response = self.client.post('/customers/', json=customer_payload)
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.json['name'], 'John Doe')
 
@@ -34,7 +34,7 @@ class TestCustomer(unittest.TestCase):
             "password": "password123"
         }
 
-        response = self.client.post('/customers', json=customer_payload)
+        response = self.client.post('/customers/', json=customer_payload)
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json['email'], 'Missing data for required field.')
 
