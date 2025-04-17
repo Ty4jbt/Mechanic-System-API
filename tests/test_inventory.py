@@ -102,6 +102,6 @@ class TestInventory(unittest.TestCase):
         for item in response.json:
             if item['name'] == 'Low Stock Part':
                 found = True
-                seldf.assertEqual(item['quantity_in_stock'], 5)
+                self.assertEqual(item['quantity_in_stock'], 5)
 
         self.assertTrue(found, "Low stock item not found in response.")
