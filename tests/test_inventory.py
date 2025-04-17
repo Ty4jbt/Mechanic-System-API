@@ -73,7 +73,7 @@ class TestInventory(unittest.TestCase):
         self.assertEqual(response.json['message'], 'successfully deleted inventory item 1')
 
     def test_popular_inventory(self):
-        response = self.client.get('/inventory/popular/')
+        response = self.client.get('/inventory/popular')
         self.assertEqual(response.status_code, 200)
 
     def test_search_inventory(self):
@@ -93,6 +93,6 @@ class TestInventory(unittest.TestCase):
             db.session.add(low_stock_item)
             db.session.commit()
 
-        response = self.client.get('/inventory/low-stock/')
+        response = self.client.get('/inventory/low-stock')
         self.assertEqual(response.status_code, 200)
         self.assertTrue(len(response.json) > 0)

@@ -36,7 +36,7 @@ class TestCustomer(unittest.TestCase):
 
         response = self.client.post('/customers/', json=customer_payload)
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json['email'], 'Missing data for required field.')
+        self.assertEqual(response.json['email'][0], 'Missing data for required field.')
 
     def test_login_customer(self):
         credentials = {
@@ -73,4 +73,4 @@ class TestCustomer(unittest.TestCase):
         response = self.client.put('/customers/', json=update_payload, headers=headers)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json['name'], 'Updated Name')
-        self.assertEqual(response.json['email'], 'test@email.com')
+        self.assertEqual(response.json['email'], 'updated@email.com')

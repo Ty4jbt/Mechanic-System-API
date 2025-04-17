@@ -3,7 +3,7 @@ from sqlalchemy import select
 from marshmallow import ValidationError
 from app.models import ServiceTicket, db, Mechanic, Inventory, ServiceInventoryQuantity
 from app.blueprints.service_ticket import service_ticket_bp
-from app.blueprints.service_ticket.schema import service_ticket_schema, service_tickets_schema, return_service_ticket_schema, edit_service_ticket_schema, add_inventory_schema, message_response_schema, reciept_schema
+from app.blueprints.service_ticket.schema import service_ticket_schema, service_tickets_schema, return_service_ticket_schema, edit_service_ticket_schema, add_inventory_schema, message_response_schema, receipt_schema
 from app.blueprints.inventory.schemas import inventory_items_schema
 from app.utils.util import customer_token_required
 
@@ -164,7 +164,7 @@ def add_inventory_to_ticket(service_ticket_id):
         'items': added_items
     }
 
-    return reciept_schema.jsonify(receipt_data), 201
+    return receipt_schema.jsonify(receipt_data), 201
 
 @service_ticket_bp.route('/<int:service_ticket_id>/inventory', methods=['GET'])
 def get_ticket_inventory(service_ticket_id):
@@ -251,7 +251,7 @@ def remove_inventory_from_ticket(service_ticket_id, inventory_id):
     else:
         return message_response_schema.jsonify({'message': 'Inventory item not found in service ticket'}), 400
 
-@service_ticket_bp.route('/<int:service_ticket_id>/reciept', methods=['GET'])
+@service_ticket_bp.route('/<int:service_ticket_id>/receipt', methods=['GET'])
 def get_service_ticket_receipt(service_ticket_id):
     query = select(ServiceTicket).where(ServiceTicket.id == service_ticket_id)
     service_ticket = db.session.execute(query).scalars().first()
@@ -293,4 +293,4 @@ def get_service_ticket_receipt(service_ticket_id):
         'items': items
     }
 
-    return reciept_schema.jsonify(receipt_data), 200
+    return receipt_schema.jsonify(receipt_data), 200

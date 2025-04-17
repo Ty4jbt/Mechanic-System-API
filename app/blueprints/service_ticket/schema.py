@@ -31,7 +31,7 @@ class AddInventorySchema(ma.Schema):
     class Meta:
         fields = ("inventory_ids", "quantities")
 
-class RecieptSchema(ma.Schema):
+class ReceiptSchema(ma.Schema):
     total_cost = fields.Float(required=True)
     service_ticket = fields.Nested('ServiceTicketSchema')
     items = fields.List(fields.Dict())
@@ -55,4 +55,4 @@ return_service_ticket_schema = ServiceTicketSchema()
 edit_service_ticket_schema = EditServiceTickerSchema()
 add_inventory_schema = AddInventorySchema()
 message_response_schema = MessageResponseSchema()
-reciept_schema = RecieptSchema()
+receipt_schema = ReceiptSchema()

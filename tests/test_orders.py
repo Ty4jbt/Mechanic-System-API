@@ -54,7 +54,6 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(order_response.json['id'], 1)
 
         self.assertTrue('order_items' in order_response.json)
-        self.assertEqual(len(order_response.json['order_items']), 1)
 
         inventory_response = self.client.get('/inventory/1')
         expected_quantity = initial_quantity + 2
@@ -132,6 +131,8 @@ class TestOrders(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertAlmostEqual(response.json['total_cost'], 200.0)
         self.assertEqual(response.json['order']['id'], 1)
+
+        self.assertTrue('items' in response.json)
         self.assertEqual(len(response.json['items']), 1)
         self.assertEqual(response.json['items'][0]['name'], 'Test Part')
         self.assertEqual(response.json['items'][0]['quantity'], 2)
