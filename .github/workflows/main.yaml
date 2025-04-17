@@ -33,7 +33,7 @@ jobs:
           echo "Python Version: $(python --version)"
           echo "Working Directory: $(pwd)"
           echo "Contents of Working Directory: $(ls -l)"
-          echo "Contents of site-packages: $((ls -l venv/lib/python*/site-packages))"
+          echo "Contents of site-packages: $(ls -l venv/lib/python*/site-packages)"
 
   test:
     needs: build
