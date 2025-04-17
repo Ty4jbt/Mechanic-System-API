@@ -25,12 +25,17 @@ class ReceiptSchema(ma.Schema):
     '''
     total_cost = fields.Float(required=True)
     order = fields.Nested('OrderSchema')
+    items = fields.List(fields.Dict())
+
+    class Meta:
+        fields = ("total_cost", "order", "items")
 
 
 class OrderSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Order
         include_relationships = True
+        include_fk = True
 
     order_items = fields.Nested('OrderItemSchema', many=True, exclude=['id'])
 

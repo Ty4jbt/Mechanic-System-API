@@ -24,7 +24,7 @@ def create_order():
     db.session.commit()
 
     total_cost = 0.0
-    order_items = []
+    items = []
 
     for item_data in order_data['inventory_items']:
         inventory_id = item_data['inventory_id']
@@ -51,7 +51,7 @@ def create_order():
 
         db.session.add(order_item)
 
-        order_items.append({
+        items.append({
             'inventory_id': inventory_id,
             'name': inventory_item.name,
             'quantity': quantity,
@@ -64,7 +64,8 @@ def create_order():
 
     receipt = {
         'total_cost': total_cost,
-        'order': new_order
+        'order': new_order,
+        'items': items
     }
 
     return receipt_schema.jsonify(receipt), 201
